@@ -1,0 +1,6 @@
+{
+  "target_triple": "aarch64-vendor-linux-gnu",
+  "llvm_version": "20.1.8",
+  "sdk_archive_filename": "aarch64-vendor-linux-gnu_sdk-something.tar.gz",
+  "rootfs_image_filename": "sdcard.img"
+}

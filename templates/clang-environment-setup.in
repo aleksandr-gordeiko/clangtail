@@ -1,0 +1,74 @@
+cat <<'SETUP_EOF'
+                      _ ___
+                     | |__ \
+  ___  ___  ___  __ _| |  ) |
+ / __|/ _ \/ __|/ _  | | / /
+ \__ \ (_) \__ \ (_| | ||_|
+ |___/\___/|___/\__,_|_|(_)
+
+       Makes embedded Linux easy!
+
+Clang SDK tips:
+* PATH now contains the SDK clang/lld utilities
+* Standard autotools variables (CC, CXX, AR, LD, CFLAGS) are exported
+* To configure do "./configure $CONFIGURE_FLAGS" or use the "configure" alias
+* To build CMake-based projects, use the "cmake" alias
+
+SETUP_EOF
+if [ x"${BASH_VERSION:-}" != x"" ] ; then
+	SDK_PATH=$(dirname "$(realpath "${BASH_SOURCE[0]}")")
+elif [ x"${ZSH_VERSION:-}" != x"" ] ; then
+	SDK_PATH=$(dirname "$(realpath "$0")")
+else
+	echo "unsupported shell"
+fi
+
+export "PATH=$SDK_PATH/bin:$SDK_PATH/sbin:$PATH"
+export "STAGING_DIR=$SDK_PATH/@@TRIPLE@@/sysroot"
+if [ "@@GCC_TOOLCHAIN_SUFFIX@@" = "__NONE__" ] ; then
+	export "CLANG_TARGET_FLAGS=--target=@@TRIPLE@@ --sysroot=$STAGING_DIR"
+else
+	export "GCC_TOOLCHAIN=$SDK_PATH@@GCC_TOOLCHAIN_SUFFIX@@"
+	export "CLANG_TARGET_FLAGS=--target=@@TRIPLE@@ --sysroot=$STAGING_DIR --gcc-toolchain=$GCC_TOOLCHAIN"
+fi
+
+export "AR=$SDK_PATH/bin/llvm-ar"
+export "AS=@@TRIPLE@@-as"
+export "LD=$SDK_PATH/bin/@@TRIPLE@@-clang $CLANG_TARGET_FLAGS -fuse-ld=lld"
+export "NM=$SDK_PATH/bin/llvm-nm"
+export "CC=$SDK_PATH/bin/@@TRIPLE@@-clang $CLANG_TARGET_FLAGS -fuse-ld=lld"
+export "GCC=$CC"
+export "CPP=$SDK_PATH/bin/@@TRIPLE@@-clang $CLANG_TARGET_FLAGS -E"
+export "CXX=$SDK_PATH/bin/@@TRIPLE@@-clang++ $CLANG_TARGET_FLAGS -fuse-ld=lld -stdlib=libc++"
+export "RANLIB=$SDK_PATH/bin/llvm-ranlib"
+export "READELF=$SDK_PATH/bin/llvm-readelf"
+export "STRIP=$SDK_PATH/bin/llvm-strip"
+export "OBJCOPY=$SDK_PATH/bin/llvm-objcopy"
+export "OBJDUMP=$SDK_PATH/bin/llvm-objdump"
+export "AR_FOR_BUILD=/usr/bin/ar"
+export "AS_FOR_BUILD=/usr/bin/as"
+export "CC_FOR_BUILD=/usr/bin/gcc"
+export "GCC_FOR_BUILD=/usr/bin/gcc"
+export "CXX_FOR_BUILD=/usr/bin/g++"
+export "LD_FOR_BUILD=/usr/bin/ld"
+export "CPPFLAGS_FOR_BUILD=-I$SDK_PATH/include"
+export "CFLAGS_FOR_BUILD=-O2 -I$SDK_PATH/include"
+export "CXXFLAGS_FOR_BUILD=-O2 -I$SDK_PATH/include"
+export "LDFLAGS_FOR_BUILD=-L$SDK_PATH/lib -Wl,-rpath,$SDK_PATH/lib"
+export "FCFLAGS_FOR_BUILD="
+export "DEFAULT_ASSEMBLER=@@TRIPLE@@-as"
+export "DEFAULT_LINKER=$SDK_PATH/bin/@@TRIPLE@@-clang -fuse-ld=lld"
+export "CPPFLAGS=-D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64"
+export "CFLAGS=-D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -O2"
+export "CXXFLAGS=-D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -O2"
+export "LDFLAGS="
+export "FCFLAGS= -O2 "
+export "FFLAGS= -O2 "
+export "PKG_CONFIG=pkg-config"
+export "PKG_CONFIG_SYSROOT_DIR=$STAGING_DIR"
+export "INTLTOOL_PERL=/usr/bin/perl"
+export "ARCH=arm64"
+export "CROSS_COMPILE=@@TRIPLE@@-"
+export "CONFIGURE_FLAGS=--target=@@TRIPLE@@ --host=@@TRIPLE@@ --build=x86_64-pc-linux-gnu --prefix=/usr --exec-prefix=/usr --sysconfdir=/etc --localstatedir=/var --program-prefix="
+alias configure="./configure ${CONFIGURE_FLAGS}"
+alias cmake="cmake -DCMAKE_TOOLCHAIN_FILE=$SDK_PATH/share/buildroot/clang-toolchainfile.cmake -DCMAKE_INSTALL_PREFIX=/usr"
